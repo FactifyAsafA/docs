@@ -1,0 +1,502 @@
+{
+	"components": {
+		"examples": {},
+		"headers": {},
+		"parameters": {},
+		"requestBodies": {},
+		"responses": {},
+		"schemas": {
+			"Actor": {
+				"properties": {
+					"object": {
+						"type": "string",
+						"enum": [
+							"user",
+							"service_account"
+						],
+						"description": "Object type"
+					},
+					"id": {
+						"type": "string",
+						"description": "User or service account ID"
+					},
+					"name": {
+						"type": "string",
+						"description": "Name of the user or service account"
+					}
+				},
+				"required": [
+					"object",
+					"id",
+					"name"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"Document": {
+				"properties": {
+					"id": {
+						"type": "string",
+						"description": "Unique identifier for the document"
+					},
+					"name": {
+						"type": "string",
+						"description": "Name of the document"
+					},
+					"description": {
+						"type": "string",
+						"description": "Description of the document"
+					},
+					"current_version_id": {
+						"type": "string",
+						"description": "Current version identifier"
+					},
+					"created_by_id": {
+						"type": "string",
+						"description": "ID of the user who created the document"
+					},
+					"created_at": {
+						"type": "string",
+						"description": "Creation timestamp"
+					},
+					"created_by": {
+						"$ref": "#/components/schemas/Actor",
+						"description": "Information about who created the document"
+					},
+					"status": {
+						"type": "string",
+						"enum": [
+							"processing",
+							"done",
+							"failed"
+						],
+						"description": "Current status of the document"
+					}
+					,
+					"url": {
+						"type": "string",
+						"description": "URL for the Factify document"
+					}
+				},
+				"required": [
+					"id",
+					"name",
+					"current_version_id",
+					"created_by_id",
+					"created_at",
+					"created_by",
+					"status"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"DocumentVersion": {
+				"properties": {
+					"id": {
+						"type": "string",
+						"description": "Unique identifier for the document version"
+					},
+					"document_id": {
+						"type": "string",
+						"description": "ID of the parent document"
+					},
+					"name": {
+						"type": "string",
+						"description": "Name of the document version"
+					},
+					"description": {
+						"type": "string",
+						"description": "Description of the document version"
+					},
+					"version_date": {
+						"type": "string",
+						"description": "Version date (required for past versions)"
+					},
+					"created_at": {
+						"type": "string",
+						"description": "Creation timestamp"
+					},
+					"created_by": {
+						"$ref": "#/components/schemas/Actor",
+						"description": "Information about who created the version"
+					},
+					"status": {
+						"type": "string",
+						"enum": [
+							"processing",
+							"done",
+							"failed"
+						],
+						"description": "Current status of the document version"
+					}
+					,
+					"url": {
+						"type": "string",
+						"description": "URL for this version of the Factify document"
+					}
+				},
+				"required": [
+					"id",
+					"document_id",
+					"name",
+					"description",
+					"created_at",
+					"created_by",
+					"status"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"CreateDocumentVersionRequest": {
+				"properties": {
+					"name": {
+						"type": "string",
+						"description": "Name of the document version"
+					},
+					"description": {
+						"type": "string",
+						"description": "Description of the document version"
+					},
+					"version_date": {
+						"type": "string",
+						"description": "Version date (required for past versions)"
+					}
+				},
+				"required": [
+					"name",
+					"description"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"GenerateEntryPageRequest": {
+				"properties": {
+					"template_id": {
+						"type": "string",
+						"description": "Template identifier (required)"
+					},
+					"version_id": {
+						"type": "string",
+						"description": "Version identifier (optional, defaults to current version)"
+					}
+				},
+				"required": [
+					"template_id"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"EntryPageResponse": {
+				"properties": {
+					"entry_page_url": {
+						"type": "string",
+						"description": "URL to the generated entry page"
+					}
+				},
+				"required": [
+					"entry_page_url"
+				],
+				"type": "object",
+				"additionalProperties": false
+			}
+		},
+		"securitySchemes": {}
+	},
+	"info": {
+		"title": "apitsoa",
+		"version": "0.0.1",
+		"description": "TSOA API specification generator",
+		"contact": {}
+	},
+	"openapi": "3.0.0",
+	"paths": {
+		"/documents": {
+			"get": {
+				"operationId": "GetDocuments",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"items": {
+										"$ref": "#/components/schemas/Document"
+									},
+									"type": "array"
+								}
+							}
+						}
+					}
+				},
+				"summary": "List all documents",
+				"tags": [
+					"Documents"
+				],
+				"security": [],
+				"parameters": []
+			},
+			"post": {
+				"operationId": "CreateDocument",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Document"
+								}
+							}
+						}
+					},
+					"201": {
+						"description": "Document created successfully",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Document"
+								}
+							}
+						}
+					}
+				},
+				"summary": "Create a new document",
+				"tags": [
+					"Documents"
+				],
+				"security": [],
+				"parameters": [],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"multipart/form-data": {
+							"schema": {
+								"type": "object",
+								"properties": {
+									"payload": {
+										"type": "string",
+										"format": "binary"
+									},
+									"name": {
+										"type": "string"
+									},
+									"description": {
+										"type": "string"
+									}
+								},
+								"required": [
+									"payload",
+									"name"
+								]
+							}
+						}
+					}
+				}
+			}
+		},
+		"/documents/{id}": {
+			"get": {
+				"operationId": "GetDocument",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Document"
+								}
+							}
+						}
+					}
+				},
+				"summary": "Get document by ID",
+				"tags": [
+					"Documents"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
+			}
+		},
+		"/documents/{document_id}/versions": {
+			"get": {
+				"operationId": "GetDocumentVersions",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"items": {
+										"$ref": "#/components/schemas/DocumentVersion"
+									},
+									"type": "array"
+								}
+							}
+						}
+					}
+				},
+				"summary": "List document versions",
+				"tags": [
+					"Document Versions"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "document_id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
+			},
+			"post": {
+				"operationId": "CreateDocumentVersion",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/DocumentVersion"
+								}
+							}
+						}
+					},
+					"201": {
+						"description": "Document version created successfully",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/DocumentVersion"
+								}
+							}
+						}
+					}
+				},
+				"summary": "Create new document version",
+				"tags": [
+					"Document Versions"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "document_id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/CreateDocumentVersionRequest"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/documents/{document_id}/versions/{version_id}": {
+			"get": {
+				"operationId": "GetDocumentVersion",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/DocumentVersion"
+								}
+							}
+						}
+					}
+				},
+				"summary": "Get specific document version",
+				"tags": [
+					"Document Versions"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "document_id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "version_id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
+			}
+		},
+		"/documents/{document_id}/entry-page": {
+			"post": {
+				"operationId": "GenerateEntryPage",
+				"responses": {
+					"200": {
+						"description": "Entry page generated successfully",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/EntryPageResponse"
+								}
+							}
+						}
+					}
+				},
+				"summary": "Generate an entry page for a document",
+				"tags": [
+					"Documents"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "document_id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/GenerateEntryPageRequest"
+							}
+						}
+					}
+				}
+			}
+		}
+	},
+	"servers": [
+		{
+			"url": "/"
+		}
+	],
+	"tags": []
+}
