@@ -1,33 +1,245 @@
----
-title: 'Introduction'
-description: 'Example section for showcasing API endpoints'
----
+# Factify API
+
+The Factify API provides a comprehensive platform for document management, version control, and collaborative access control. Build powerful applications that can create, manage, and share documents with granular permission controls.
+
+## Getting Started
+
+### Base URL
+
+All API requests should be made to:
+
+```
+https://api.factify.com
+```
+
+### Authentication
+
+The Factify API uses API keys for authentication. Include your API key in the Authorization header:
+
+```bash
+curl -H "Authorization: Bearer YOUR_API_KEY" \
+     https://api.factify.com/documents
+```
 
 <Note>
-  If you're not looking to build API reference documentation, you can delete
-  this section by removing the api-reference folder.
+Keep your API key secure and never expose it in client-side code or public repositories.
 </Note>
 
-## Welcome
+### Rate Limits
 
-There are two ways to build API documentation: [OpenAPI](https://mintlify.com/docs/api-playground/openapi/setup) and [MDX components](https://mintlify.com/docs/api-playground/mdx/configuration). For the starter kit, we are using the following OpenAPI specification.
+The API implements rate limiting to ensure fair usage:
 
-<Card
-  title="Plant Store Endpoints"
-  icon="leaf"
-  href="https://github.com/mintlify/starter/blob/main/api-reference/openapi.json"
->
-  View the OpenAPI specification file
-</Card>
+- **Standard requests**: 1000 requests per hour
+- **Document uploads**: 100 requests per hour
+- **Collaborator invitations**: 50 requests per hour
 
-## Authentication
+Rate limit headers are included in all responses:
+- `X-RateLimit-Limit`: Maximum requests allowed
+- `X-RateLimit-Remaining`: Requests remaining in current window
+- `X-RateLimit-Reset`: Unix timestamp when the rate limit resets
 
-All API endpoints are authenticated using Bearer tokens and picked up from the specification file.
+## Core Concepts
+
+### Documents
+
+Documents are the primary entities in the Factify system. Each document represents a file or content that can be:
+
+- **Uploaded** with metadata (name, description)
+- **Versioned** to track changes over time
+- **Shared** with collaborators using role-based access control
+- **Generated** into entry pages for external access
+
+### Document Versions
+
+Every document maintains a version history, allowing you to:
+
+- Track changes over time
+- Create new versions with different content
+- Access historical versions
+- Generate entry pages from specific versions
+
+### Collaborators
+
+Document access is managed through a collaborator system with five distinct roles:
+
+- **Viewer**: Read-only access to documents
+- **Commenter**: Can view and add comments
+- **Collaborator**: Can edit content and create versions
+- **Admin**: Can manage collaborators and settings
+- **Owner**: Full control including ownership transfer
+
+### Status Tracking
+
+Collaborators have two possible statuses:
+
+- **Active**: Has accepted the invitation and has full access
+- **Invitation Pending**: Invited but hasn't accepted yet
+
+## API Design Principles
+
+### RESTful Design
+
+The Factify API follows REST principles:
+
+- **Resources** are identified by URLs
+- **HTTP methods** indicate the action (GET, POST, PATCH, DELETE)
+- **Status codes** communicate the result of operations
+- **JSON** is used for all request and response bodies
+
+### Consistent Response Format
+
+All paginated responses follow a standardized structure:
 
 ```json
-"security": [
-  {
-    "bearerAuth": []
+{
+  "data": [...],
+  "pagination": {
+    "total": 300,
+    "limit": 20,
+    "nextCursor": "dXNlcjEwMDA=",
+    "previousCursor": "dXNlcjEwMjQ="
   }
-]
+}
 ```
+
+### Error Handling
+
+The API uses standard HTTP status codes and provides detailed error information:
+
+```json
+{
+  "error": "validation_failed",
+  "message": "Invalid request parameters",
+  "details": {
+    "field": "email",
+    "issue": "Invalid email format"
+  }
+}
+```
+
+## Common Use Cases
+
+### Document Management
+
+Create and manage documents with full lifecycle support:
+
+```bash
+# Create a new document
+POST /documents
+Content-Type: multipart/form-data
+
+# List all documents
+GET /documents
+
+# Get specific document
+GET /documents/{id}
+```
+
+### Version Control
+
+Track document changes with comprehensive versioning:
+
+```bash
+# Create new version
+POST /documents/{document_id}/versions
+
+# List document versions
+GET /documents/{document_id}/versions
+
+# Get specific version
+GET /documents/{document_id}/versions/{version_id}
+```
+
+### Collaboration Management
+
+Invite and manage document collaborators:
+
+```bash
+# Invite collaborators
+POST /documents/{document_id}/collaborators
+{
+  "invitations": [
+    {
+      "email": "user@example.com",
+      "role": "Collaborator"
+    }
+  ],
+  "sendEmail": true
+}
+
+# List collaborators
+GET /documents/{document_id}/collaborators
+
+# Update collaborator role
+PATCH /documents/{document_id}/collaborators/{collaborator_id}
+{
+  "role": "Admin"
+}
+```
+
+### Entry Page Generation
+
+Generate public access pages for documents:
+
+```bash
+# Generate entry page
+POST /documents/{document_id}/entry-page
+{
+  "template_id": "template_123",
+  "version_id": "version_456"
+}
+```
+
+## SDKs and Libraries
+
+Official SDKs are available for popular programming languages:
+
+- **JavaScript/Node.js**: `npm install @factify/api-client`
+- **Python**: `pip install factify-api`
+- **Go**: `go get github.com/factify/api-client-go`
+- **PHP**: `composer require factify/api-client`
+
+## Webhooks
+
+Subscribe to real-time events for document and collaborator changes:
+
+- Document created/updated
+- Collaborator invited/removed
+- Version created
+- Entry page generated
+
+Configure webhooks in your account settings to receive notifications at your endpoints.
+
+## Support
+
+### Documentation
+
+- **API Reference**: Complete endpoint documentation
+- **Guides**: Step-by-step tutorials
+- **Examples**: Code samples in multiple languages
+- **Changelog**: API updates and new features
+
+### Community
+
+- **GitHub**: Report issues and contribute
+- **Discord**: Community support and discussions
+- **Stack Overflow**: Tag questions with `factify-api`
+
+### Enterprise Support
+
+For enterprise customers, we offer:
+
+- **Priority support** with dedicated account managers
+- **Custom rate limits** and SLA guarantees
+- **Advanced security** features and compliance
+- **On-premise deployment** options
+
+Contact our sales team at enterprise@factify.com for more information.
+
+## Next Steps
+
+Ready to start building? Check out our [Quickstart Guide](/quickstart) to create your first document and invite collaborators in minutes.
+
+<Tip>
+Start with the [Authentication Guide](/guides/authentication) to set up your API keys and make your first request.
+</Tip>
