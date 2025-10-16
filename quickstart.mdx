@@ -1,80 +1,387 @@
----
-title: "Quickstart"
-description: "Start building awesome documentation in minutes"
----
+# Quickstart Guide
 
-## Get started in three steps
+Get up and running with the Factify API in minutes. This guide will walk you through creating your first document, managing collaborators, and generating an entry page.
 
-Get your documentation site running locally and make your first customization.
+## Prerequisites
 
-### Step 1: Set up your local environment
+Before you begin, make sure you have:
 
-<AccordionGroup>
-  <Accordion icon="copy" title="Clone your docs locally">
-    During the onboarding process, you created a GitHub repository with your docs content if you didn't already have one. You can find a link to this repository in your [dashboard](https://dashboard.mintlify.com).
-    
-    To clone the repository locally so that you can make and preview changes to your docs, follow the [Cloning a repository](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository) guide in the GitHub docs.
-  </Accordion>
-  <Accordion icon="rectangle-terminal" title="Start the preview server">
-    1. Install the Mintlify CLI: `npm i -g mint`
-    2. Navigate to your docs directory and run: `mint dev`
-    3. Open `http://localhost:3000` to see your docs live!
-    
-    <Tip>Your preview updates automatically as you edit files.</Tip>
-  </Accordion>
-</AccordionGroup>
+- A Factify account ([Sign up here](https://factify.com/signup))
+- Your API key from the [API Keys section](https://factify.com/settings/api-keys)
+- A PDF file to upload 
 
-### Step 2: Deploy your changes
+## Step 1: Set Up Authentication
 
-<AccordionGroup>
-  <Accordion icon="github" title="Install our GitHub app">
-    Install the Mintlify GitHub app from your [dashboard](https://dashboard.mintlify.com/settings/organization/github-app).
-    
-    Our GitHub app automatically deploys your changes to your docs site, so you don't need to manage deployments yourself.
-</Accordion>
-<Accordion icon="palette" title="Update your site name and colors">
-    For a first change, let's update the name and colors of your docs site.
+First, let's set up your API key. You can use it in several ways:
 
-    1. Open `docs.json` in your editor.
-    2. Change the `"name"` field to your project name.
-    3. Update the `"colors"` to match your brand.
-    4. Save and see your changes instantly at `http://localhost:3000`.
+### Using cURL
 
-    <Tip>Try changing the primary color to see an immediate difference!</Tip>
-  </Accordion>
-</AccordionGroup>
+```bash
+export FACTIFY_API_KEY="your_api_key_here"
+```
 
-### Step 3: Go live
+### Using JavaScript/Node.js
 
-<Accordion icon="rocket" title="Publish your docs">
-  1. Commit and push your changes.
-  2. Your docs will update and be live in moments!
-</Accordion>
+```javascript
+const apiKey = 'your_api_key_here';
+const baseURL = 'https://api.factify.com';
 
-## Next steps
+const headers = {
+  'Authorization': `Bearer ${apiKey}`,
+  'Content-Type': 'application/json'
+};
+```
 
-Now that you have your docs running, explore these key features:
+### Using Python
 
-<CardGroup cols={2}>
+```python
+import requests
 
-<Card title="Write Content" icon="pen-to-square" href="/essentials/markdown">
-  Learn MDX syntax and start writing your documentation.
-</Card>
-
-<Card title="Customize style" icon="palette" href="/essentials/settings">
-  Make your docs match your brand perfectly.
-</Card>
-
-<Card title="Add code examples" icon="square-code" href="/essentials/code">
-  Include syntax-highlighted code blocks.
-</Card>
-
-<Card title="API documentation" icon="code" href="/api-reference/introduction">
-  Auto-generate API docs from OpenAPI specs.
-</Card>
-
-</CardGroup>
+api_key = 'your_api_key_here'
+base_url = 'https://api.factify.com'
+headers = {
+    'Authorization': f'Bearer {api_key}',
+    'Content-Type': 'application/json'
+}
+```
 
 <Note>
-  **Need help?** See our [full documentation](https://mintlify.com/docs) or join our [community](https://mintlify.com/community).
+Keep your API key secure and never commit it to version control. Use environment variables in production.
 </Note>
+
+## Step 2: Create Your First Document
+
+Let's upload a document to Factify. You can upload various file types including PDFs, Word documents, text files, and images.
+
+### Using cURL
+
+```bash
+curl -X POST https://api.factify.com/documents \
+  -H "Authorization: Bearer $FACTIFY_API_KEY" \
+  -F "payload=@/path/to/your/document.pdf" \
+  -F "name=My First Document" \
+  -F "description=A sample document for testing the Factify API"
+```
+
+### Using JavaScript/Node.js
+
+```javascript
+const formData = new FormData();
+formData.append('payload', fileInput.files[0]); // Your file
+formData.append('name', 'My First Document');
+formData.append('description', 'A sample document for testing the Factify API');
+
+const response = await fetch(`${baseURL}/documents`, {
+  method: 'POST',
+  headers: {
+    'Authorization': `Bearer ${apiKey}`
+  },
+  body: formData
+});
+
+const document = await response.json();
+console.log('Document created:', document);
+```
+
+### Using Python
+
+```python
+import requests
+
+# Prepare the file and metadata
+files = {
+    'payload': ('document.pdf', open('/path/to/your/document.pdf', 'rb'), 'application/pdf')
+}
+data = {
+    'name': 'My First Document',
+    'description': 'A sample document for testing the Factify API'
+}
+
+response = requests.post(
+    f'{base_url}/documents',
+    headers={'Authorization': f'Bearer {api_key}'},
+    files=files,
+    data=data
+)
+
+document = response.json()
+print('Document created:', document)
+```
+
+### Response
+
+You'll receive a response like this:
+
+```json
+{
+  "id": "doc_123456789",
+  "name": "My First Document",
+  "description": "A sample document for testing the Factify API",
+  "current_version_id": "ver_987654321",
+  "created_at": "2024-01-15T10:30:00Z",
+  "created_by": {
+    "object": "user",
+    "id": "user_123",
+    "name": "John Doe"
+  },
+  "status": "done",
+  "url": "https://factify.com/documents/doc_123456789"
+}
+```
+
+<Note>
+The document status will be "processing" initially and change to "done" once the upload and processing is complete.
+</Note>
+
+## Step 3: Invite Collaborators
+
+Now let's invite some collaborators to work on your document. You can invite users by email or user ID.
+
+### Invite by Email
+
+```bash
+curl -X POST https://api.factify.com/documents/doc_123456789/collaborators \
+  -H "Authorization: Bearer $FACTIFY_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "invitations": [
+      {
+        "email": "colleague@example.com",
+        "role": "Collaborator"
+      },
+      {
+        "email": "reviewer@example.com", 
+        "role": "Commenter"
+      }
+    ],
+    "sendEmail": true
+  }'
+```
+
+### Invite Existing Users by ID
+
+```bash
+curl -X POST https://api.factify.com/documents/doc_123456789/collaborators \
+  -H "Authorization: Bearer $FACTIFY_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "invitations": [
+      {
+        "userId": "user_456",
+        "role": "Admin"
+      }
+    ],
+    "sendEmail": false
+  }'
+```
+
+### Response
+
+```json
+{
+  "document_id": "doc_123456789",
+  "successful_invitations": [
+    {
+      "id": "collab_111",
+      "role": "Collaborator",
+      "status": "invitation_pending",
+      "joined_at": "2024-01-15T10:35:00Z",
+      "user": {
+        "id": "user_789",
+        "type": "user",
+        "name": "Jane Smith",
+        "email": "colleague@example.com"
+      }
+    }
+  ],
+  "failed_invitations": [],
+  "invited_by": {
+    "id": "user_123",
+    "name": "John Doe"
+  }
+}
+```
+
+## Step 4: List Document Collaborators
+
+Check who has access to your document:
+
+```bash
+curl -X GET https://api.factify.com/documents/doc_123456789/collaborators \
+  -H "Authorization: Bearer $FACTIFY_API_KEY"
+```
+
+### Response
+
+```json
+{
+  "data": [
+    {
+      "id": "collab_111",
+      "role": "Owner",
+      "status": "active",
+      "joined_at": "2024-01-15T10:30:00Z",
+      "user": {
+        "id": "user_123",
+        "type": "user",
+        "name": "John Doe",
+        "email": "john@example.com"
+      }
+    },
+    {
+      "id": "collab_222",
+      "role": "Collaborator", 
+      "status": "invitation_pending",
+      "joined_at": "2024-01-15T10:35:00Z",
+      "user": {
+        "id": "user_789",
+        "type": "user",
+        "name": "Jane Smith",
+        "email": "colleague@example.com"
+      }
+    }
+  ],
+  "pagination": {
+    "total": 2,
+    "limit": 20,
+    "nextCursor": null,
+    "previousCursor": null
+  }
+}
+```
+
+## Step 5: Create a New Version
+
+Let's create a new version of your document with updated content:
+
+```bash
+curl -X POST https://api.factify.com/documents/doc_123456789/versions \
+  -H "Authorization: Bearer $FACTIFY_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Updated Document v2",
+    "description": "Second version with additional content and improvements"
+  }'
+```
+
+### Response
+
+```json
+{
+  "id": "ver_555666777",
+  "document_id": "doc_123456789",
+  "name": "Updated Document v2",
+  "description": "Second version with additional content and improvements",
+  "created_at": "2024-01-15T11:00:00Z",
+  "created_by": {
+    "object": "user",
+    "id": "user_123",
+    "name": "John Doe"
+  },
+  "status": "done",
+  "url": "https://factify.com/documents/doc_123456789/versions/ver_555666777"
+}
+```
+
+## Step 6: Generate an Entry Page
+
+Now let's create a public entry page for your document. This allows external users to access the document without needing a Factify account.
+
+### Generate Entry Page
+
+```bash
+curl -X POST https://api.factify.com/documents/doc_123456789/entry-page \
+  -H "Authorization: Bearer $FACTIFY_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "template_id": "template_default",
+    "version_id": "ver_555666777"
+  }'
+```
+
+### Response
+
+```json
+{
+  "entry_page_url": "https://factify.com/entry/abc123def456"
+}
+```
+
+### Access Your Entry Page
+
+You can now share the entry page URL with anyone, and they'll be able to view your document without needing to sign up for Factify.
+
+<Tip>
+Entry pages are perfect for sharing documents with clients, stakeholders, or anyone who needs read-only access without creating an account.
+</Tip>
+
+## Step 7: Download the Entry Page Content
+
+To programmatically access the entry page content, you can make a request to the entry page URL:
+
+### Using cURL
+
+```bash
+curl -X GET https://factify.com/entry/abc123def456 \
+  -H "Accept: application/json"
+```
+
+### Using JavaScript
+
+```javascript
+const entryPageResponse = await fetch('https://factify.com/entry/abc123def456', {
+  headers: {
+    'Accept': 'application/json'
+  }
+});
+
+const entryPageData = await entryPageResponse.json();
+console.log('Entry page content:', entryPageData);
+```
+
+### Using Python
+
+```python
+import requests
+
+response = requests.get(
+    'https://factify.com/entry/abc123def456',
+    headers={'Accept': 'application/json'}
+)
+
+entry_page_data = response.json()
+print('Entry page content:', entry_page_data)
+```
+
+## Next Steps
+
+Congratulations! You've successfully:
+
+✅ Created your first document  
+✅ Invited collaborators  
+✅ Created a new version  
+✅ Generated a public entry page  
+✅ Accessed the entry page content  
+
+### What's Next?
+
+- **Explore the API Reference**: Check out the complete [API documentation](/api-reference/introduction) for all available endpoints
+- **Learn about Webhooks**: Set up real-time notifications for document changes
+- **Try Advanced Features**: Experiment with bulk operations, role management, and version control
+- **Build an Integration**: Use our SDKs to integrate Factify into your application
+
+### Common Use Cases
+
+- **Document Collaboration**: Invite team members to review and edit documents
+- **Client Sharing**: Generate entry pages for client document reviews
+- **Version Control**: Track document changes and maintain history
+- **Content Management**: Build document management systems with granular permissions
+
+### Need Help?
+
+- **API Reference**: Complete endpoint documentation
+- **Community Support**: Join our [Discord community](https://discord.gg/factify)
+- **GitHub Issues**: Report bugs or request features
+- **Enterprise Support**: Contact us at enterprise@factify.com
+
+Happy building with Factify! 🚀
