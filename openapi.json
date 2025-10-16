@@ -193,6 +193,177 @@
 				],
 				"type": "object",
 				"additionalProperties": false
+			},
+			"DocumentMembersInvite": {
+				"type": "object",
+				"required": ["invitations"],
+				"properties": {
+					"invitations": {
+						"type": "array",
+						"minItems": 1,
+						"maxItems": 20,
+						"items": {
+							"type": "object",
+							"required": ["role"],
+							"properties": {
+								"userId": {
+									"type": "string",
+									"description": "User ID (required if email is not provided)"
+								},
+								"email": {
+									"type": "string",
+									"format": "email",
+									"description": "Email address (required if userId is not provided)"
+								},
+								"role": {
+									"type": "string",
+									"enum": ["Viewer", "Commenter", "Collaborator", "Admin", "Owner"],
+									"description": "Role to assign to the user"
+								}
+							},
+							"additionalProperties": false,
+							"description": "Either userId or email must be provided, but not both"
+						}
+					},
+					"sendEmail": {
+						"type": "boolean",
+						"default": true,
+						"description": "Whether to send invitation email to users"
+					}
+				},
+				"additionalProperties": false
+			},
+			"InvitationResult": {
+				"type": "object",
+				"required": ["document_id", "successful_invitations", "failed_invitations"],
+				"properties": {
+					"document_id": {
+						"type": "string"
+					},
+					"successful_invitations": {
+						"type": "array",
+						"items": {
+							"$ref": "#/components/schemas/DocumentCollaborator"
+						}
+					},
+					"failed_invitations": {
+						"type": "array",
+						"items": {
+							"type": "object",
+							"required": ["email", "error"],
+							"properties": {
+								"email": {
+									"type": "string",
+									"format": "email"
+								},
+								"error": {
+									"type": "string"
+								}
+							}
+						}
+					},
+					"invited_by": {
+						"type": "object",
+						"properties": {
+							"id": {
+								"type": "string"
+							},
+							"name": {
+								"type": "string"
+							}
+						}
+					}
+				},
+				"additionalProperties": false
+			},
+			"DocumentMemberChanges": {
+				"type": "object",
+				"required": ["role"],
+				"properties": {
+					"role": {
+						"type": "string",
+						"enum": ["Viewer", "Commenter", "Collaborator", "Admin", "Owner"]
+					}
+				},
+				"additionalProperties": false
+			},
+			"DocumentCollaborator": {
+				"type": "object",
+				"required": ["id", "role", "status", "user"],
+				"properties": {
+					"id": {
+						"type": "string"
+					},
+					"role": {
+						"type": "string",
+						"enum": ["Viewer", "Commenter", "Collaborator", "Admin", "Owner"]
+					},
+					"status": {
+						"type": "string",
+						"enum": ["active", "invitation_pending"],
+						"description": "Status of the collaborator - active means they have accepted the invitation, invitation_pending means they haven't accepted yet"
+					},
+					"joined_at": {
+						"type": "string",
+						"format": "date-time"
+					},
+					"user": {
+						"type": "object",
+						"required": ["id", "type"],
+						"properties": {
+							"id": {
+								"type": "string"
+							},
+							"type": {
+								"type": "string",
+								"enum": ["user", "service_account"]
+							},
+							"name": {
+								"type": "string"
+							},
+							"email": {
+								"type": "string",
+								"format": "email"
+							}
+						}
+					}
+				},
+				"additionalProperties": false
+			},
+			"DocumentCollaboratorsPagedResponse": {
+				"type": "object",
+				"required": ["data", "pagination"],
+				"properties": {
+					"data": {
+						"type": "array",
+						"items": {
+							"$ref": "#/components/schemas/DocumentCollaborator"
+						}
+					},
+					"pagination": {
+						"type": "object",
+						"required": ["total", "limit"],
+						"properties": {
+							"total": {
+								"type": "integer"
+							},
+							"limit": {
+								"type": "integer",
+								"minimum": 1,
+								"maximum": 50,
+								"default": 20
+							},
+							"nextCursor": {
+								"type": "string"
+							},
+							"previousCursor": {
+								"type": "string"
+							}
+						},
+						"additionalProperties": false
+					}
+				},
+				"additionalProperties": false
 			}
 		},
 		"securitySchemes": {}
@@ -486,6 +657,253 @@
 					}
 				}
 			}
+		},
+		"/documents/{document_id}/collaborators": {
+			"post": {
+				"operationId": "InviteDocumentCollaborators",
+				"responses": {
+					"201": {
+						"description": "Users invited successfully",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/InvitationResult"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Invalid parameters"
+					},
+					"404": {
+						"description": "Document not found"
+					},
+					"409": {
+						"description": "One or more users already have access"
+					}
+				},
+				"summary": "Invites users to collaborate on a document by sending an invitation email",
+				"tags": [
+					"Document Collaborators"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "document_id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/DocumentMembersInvite"
+							}
+						}
+					}
+				}
+			},
+			"get": {
+				"operationId": "GetDocumentCollaborators",
+				"responses": {
+					"200": {
+						"description": "Document collaborators retrieved successfully",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/DocumentCollaboratorsPagedResponse"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Invalid parameters"
+					},
+					"404": {
+						"description": "Document not found"
+					}
+				},
+				"summary": "Retrieves a pageable list of document collaborators",
+				"tags": [
+					"Document Collaborators"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "document_id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "limit",
+						"required": false,
+						"schema": {
+							"type": "integer",
+							"default": 20,
+							"minimum": 1,
+							"maximum": 50
+						}
+					},
+					{
+						"in": "query",
+						"name": "offset",
+						"required": false,
+						"schema": {
+							"type": "integer",
+							"default": 0
+						}
+					}
+				]
+			}
+		},
+		"/documents/{document_id}/collaborators/{collaborator_id}": {
+			"get": {
+				"operationId": "GetDocumentCollaborator",
+				"responses": {
+					"200": {
+						"description": "Document collaborator retrieved successfully",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/DocumentCollaborator"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Invalid parameters"
+					},
+					"404": {
+						"description": "Document or collaborator not found"
+					}
+				},
+				"summary": "Retrieves details of a specific document collaborator",
+				"tags": [
+					"Document Collaborators"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "document_id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "collaborator_id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
+			},
+			"patch": {
+				"operationId": "UpdateDocumentCollaborator",
+				"responses": {
+					"200": {
+						"description": "Collaborator role updated successfully",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/DocumentCollaborator"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Invalid role"
+					},
+					"404": {
+						"description": "Document or collaborator not found"
+					},
+					"409": {
+						"description": "Ownership constraint violated"
+					}
+				},
+				"summary": "Updates the role of a document collaborator",
+				"tags": [
+					"Document Collaborators"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "document_id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "collaborator_id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/DocumentMemberChanges"
+							}
+						}
+					}
+				}
+			},
+			"delete": {
+				"operationId": "RemoveDocumentCollaborator",
+				"responses": {
+					"204": {
+						"description": "Collaborator removed successfully"
+					},
+					"400": {
+						"description": "Invalid parameters"
+					},
+					"404": {
+						"description": "Document or collaborator not found"
+					}
+				},
+				"summary": "Removes a collaborator from a document",
+				"tags": [
+					"Document Collaborators"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "document_id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "collaborator_id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
+			}
 		}
 	},
 	"servers": [
@@ -493,5 +911,18 @@
 			"url": "/"
 		}
 	],
-	"tags": []
+	"tags": [
+		{
+			"name": "Documents",
+			"description": "Document management operations"
+		},
+		{
+			"name": "Document Versions",
+			"description": "Document version management operations"
+		},
+		{
+			"name": "Document Collaborators",
+			"description": "Document collaborator and access control operations"
+		}
+	]
 }

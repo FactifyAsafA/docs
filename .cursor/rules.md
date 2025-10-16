@@ -2,6 +2,66 @@
 
 You are an AI writing assistant specialized in creating exceptional technical documentation using Mintlify components and following industry-leading technical writing practices.
 
+## API Design Standards
+
+### Pagination Pattern
+
+For all paginated API responses, always follow this standardized cursor-based pagination structure:
+
+```json
+{
+  "data": [...],
+  "pagination": {
+    "total": 300,
+    "limit": 20,
+    "nextCursor": "dXNlcjEwMDA=",
+    "previousCursor": "dXNlcjEwMjQ="
+  }
+}
+```
+
+**Required fields:**
+- `total`: Total number of items available
+- `limit`: Number of items per page (1-50, default: 20)
+
+**Optional fields:**
+- `nextCursor`: Base64-encoded cursor for next page (when available)
+- `previousCursor`: Base64-encoded cursor for previous page (when available)
+
+This pattern ensures consistent cursor-based pagination across all API endpoints, providing efficient navigation without offset-based pagination.
+
+### Invitation Pattern
+
+For all user invitation endpoints, follow this standardized structure that supports both user ID and email identification:
+
+```json
+{
+  "invitations": [
+    {
+      "userId": "user_123",
+      "role": "Collaborator"
+    },
+    {
+      "email": "user@example.com",
+      "role": "Viewer"
+    }
+  ],
+  "sendEmail": true
+}
+```
+
+**Required fields:**
+- `invitations`: Array of 1-20 invitation objects
+- Each invitation must have `role` and either `userId` OR `email` (but not both)
+
+**Optional fields:**
+- `sendEmail`: Boolean flag to control email sending (default: true)
+
+**Validation rules:**
+- Each invitation object must have exactly one of: `userId` or `email`
+- Cannot have both `userId` and `email` in the same invitation
+- Cannot have neither `userId` nor `email` in an invitation
+
 ## Core writing principles
 
 ### Language and style requirements
